@@ -20,8 +20,11 @@ public class AlphaVantageHistoricalPriceService implements HistoricalPriceServic
     private final String apikey;
 
     public static final String SEP = ",";
-    public static final CsvReader.ParseFunction<Instant> DATE_COLUMN = ofColumn("timestamp").map(s -> LocalDate.from(DateTimeFormatter.ISO_DATE.parse(s)).atStartOfDay(ZoneOffset.UTC.normalized()).toInstant());
-    public static final CsvReader.ParseFunction<Double> CLOSE_COLUMN = doubleColumn("adjusted_close");
+    public static final CsvReader.ParseFunction<Instant> DATE_COLUMN = ofColumn("timestamp")
+            .map(s -> LocalDate.from(DateTimeFormatter.ISO_DATE.parse(s))
+                    .atStartOfDay(ZoneOffset.UTC.normalized())
+                    .toInstant());
+    public static final CsvReader.ParseFunction<Double> CLOSE_COLUMN = doubleColumn("close");
     public static final CsvReader.ParseFunction<Double> HIGH_COLUMN = doubleColumn("high");
     public static final CsvReader.ParseFunction<Double> LOW_COLUMN = doubleColumn("low");
     public static final CsvReader.ParseFunction<Double> OPEN_COLUMN = doubleColumn("open");
@@ -41,15 +44,20 @@ public class AlphaVantageHistoricalPriceService implements HistoricalPriceServic
     }
 
     private static DoubleSeries csvToDoubleSeries(String csv, String symbol) {
+        // 🛑 Handle case where API returns a JSON error response
+        if (csv.trim().startsWith("{")) {
+            log.error("Received non-CSV error response from AlphaVantage for symbol {}: \n{}", symbol, csv);
+            return new DoubleSeries(symbol); // ✅ Constructor with name
+        }
+
         Stream<String> lines = Stream.of(csv.split("\n"));
         DoubleSeries prices = CsvReader.parse(lines, SEP, DATE_COLUMN, CLOSE_COLUMN);
         prices.setName(symbol);
-        prices = prices.toAscending();
-        return prices;
+        return prices.toAscending();
     }
 
     private static String createHistoricalPricesUrl(String symbol, String apikey) {
-        return format("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=%s&datatype=csv&outputsize=full",
+        return format("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=%s&apikey=%s&datatype=csv&outputsize=compact",
                 symbol, apikey);
     }
 
