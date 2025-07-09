@@ -1,195 +1,171 @@
-# FinGrow - Java Trading Backtest Engine
+# FinGrow - Statistical Pairs Trading Backtester
 
-A comprehensive Java-based backtesting framework for algorithmic trading strategies with support for multiple instruments and advanced statistical analysis.
+A robust, Java-based platform to **backtest cointegration-driven trading strategies** using **Kalman filters** and real-world historical data. Built for quantitative finance enthusiasts, FinGrow emphasizes statistical rigor, modularity, and real trade simulation.
 
-## Features
+---
 
-- **Backtest Engine**: Complete backtesting framework with P&L tracking, commission calculation, and performance metrics
-- **Trading Strategies**: Includes cointegration-based pairs trading strategy using Kalman filters
-- **Data Integration**: Alpha Vantage API integration for historical price data
-- **Statistical Analysis**: Built-in statistics including Sharpe ratio, drawdown analysis, and returns calculation
-- **CSV Support**: Import/export functionality for data analysis
-- **Time Series Processing**: Comprehensive time series manipulation and analysis tools
+## 🚀 Key Features
 
-## Quick Start
+* **Cointegration-Based Strategy**: Includes implementation of a dynamic hedge ratio using Kalman Filter for pairs trading.
+* **Real Market Data Integration**: Pulls historical price data via [Alpha Vantage API](https://www.alphavantage.co).
+* **Trade Simulation Engine**: Executes long/short trades with leverage, P/L tracking, and commission modeling.
+* **Performance Metrics**: Calculates returns, Sharpe ratio, and final value; stores full trading logs.
+* **Interactive Charting**: Visualizes cumulative profit/loss over time using XChart.
+* **CSV Exports**: Outputs detailed trade and performance logs to CSV files.
 
-### Prerequisites
+---
 
-- Java 11 or higher
-- Gradle 8.4+
-- Alpha Vantage API key (free at https://www.alphavantage.co/support/#api-key)
+## 🧪 Quick Start Guide
 
-### Building and Running
+### ✅ Requirements
 
-1. **Clone and build the project:**
-   ```bash
-   ./gradlew build
-   ```
+* Java 11 or newer
+* Gradle (or use wrapper `./gradlew`)
+* Free [Alpha Vantage API Key](https://www.alphavantage.co/support/#api-key)
 
-2. **Run the backtest with demo data:**
-   ```bash
-   ./gradlew run
-   ```
+### 🔧 Running the Backtest
 
-3. **Run with your own API key:**
-   ```bash
-   ./gradlew run -Dalphavantage.apikey=YOUR_API_KEY
-   ```
+```bash
+# Build the project
+./gradlew build
 
-### Example Output
+# Run the backtest with your Alpha Vantage API key
+./gradlew run -Dalphavantage.apikey=YOUR_API_KEY
+```
 
-The backtest will output:
-- Individual trade details (CSV format)
-- Performance metrics (returns, Sharpe ratio, drawdown)
-- Strategy-specific statistics
-- File paths to detailed CSV reports
+> The program will fetch data for pre-defined pairs (e.g., GLD & GDX), simulate trades, and open a P/L graph.
 
-## Architecture
+---
 
-### Core Components
+## 🖼 Sample Output
 
-- **Backtest Engine** (`org.lst.trading.lib.backtest`): Main backtesting framework
-- **Trading Context** (`org.lst.trading.lib.model`): Interface for strategy execution
-- **Time Series** (`org.lst.trading.lib.series`): Data structures for price and indicator data
-- **Strategies** (`org.lst.trading.main.strategy`): Trading strategy implementations
-- **Utilities** (`org.lst.trading.lib.util`): Data fetching, statistics, and helper functions
+* 📈 Real-time chart: Cumulative Profit/Loss over time
+* 📁 Files:
 
-### Key Classes
+   * `orders-*.csv` – Executed trades and P/L breakdown
+   * `statistics-*.csv` – Strategy statistics like Sharpe, drawdown
 
-- `Backtest`: Main backtesting engine
-- `TradingStrategy`: Interface for implementing trading strategies
-- `CointegrationTradingStrategy`: Pairs trading strategy using Kalman filters
-- `DoubleSeries`/`MultipleDoubleSeries`: Time series data structures
-- `AlphaVantageHistoricalPriceService`: Market data provider
+---
 
-## Strategy Development
+## 🏗 Project Structure
 
-### Creating a Custom Strategy
+| Module                          | Purpose                                    |
+| ------------------------------- | ------------------------------------------ |
+| `org.lst.trading.lib.backtest`  | Core backtesting engine                    |
+| `org.lst.trading.main.strategy` | Strategy definitions (e.g., Kalman-based)  |
+| `org.lst.trading.lib.series`    | Time series representation                 |
+| `org.lst.trading.lib.util`      | Utility classes: HTTP, data parsers, stats |
+| `org.lst.trading.lib.model`     | Trading context and order execution        |
+
+### 🔑 Notable Classes
+
+* `Backtest`: Executes strategies, tracks portfolio P/L
+* `TradingStrategy`: Interface for custom trading logic
+* `CointegrationTradingStrategy`: Kalman-filter-driven pair trading logic
+* `AlphaVantageHistoricalPriceService`: Fetches price data via API
+* `DoubleSeries`, `MultipleDoubleSeries`: Time series containers
+
+---
+
+## 📊 Performance Metrics Computed
+
+* **Total Return** & **Annualized Return**
+* **Sharpe Ratio** (assumes zero risk-free rate)
+* **Maximum Drawdown**
+* **Win Rate** and **Commission Costs**
+
+---
+
+## ⚙️ Custom Strategy Example
 
 ```java
 public class MyStrategy implements TradingStrategy {
-    private TradingContext context;
-    
-    @Override
+    TradingContext context;
+
     public void onStart(TradingContext context) {
         this.context = context;
-        // Initialize strategy
     }
-    
-    @Override
+
     public void onTick() {
-        // Execute trading logic on each price update
         double price = context.getLastPrice("AAPL");
-        if (shouldBuy(price)) {
-            context.order("AAPL", true, 100); // Buy 100 shares
-        }
+        if (price < 100) context.order("AAPL", true, 50);  // Buy condition
     }
-    
-    @Override
+
     public void onEnd() {
-        // Cleanup and final calculations
+        // Final calculations
     }
 }
 ```
 
-### Running Custom Strategies
+### Backtest It:
 
 ```java
-TradingStrategy strategy = new MyStrategy();
-Backtest backtest = new Backtest(10000, priceSeries); // $10,000 initial capital
-Backtest.Result result = backtest.run(strategy);
+Backtest bt = new Backtest(10000, priceSeries);
+bt.setLeverage(2.0);
+Result result = bt.run(new MyStrategy());
 ```
 
-## Configuration
+---
 
-### System Properties
+## 🔌 Customizing Data Sources
 
-- `-Dalphavantage.apikey=KEY`: Set Alpha Vantage API key
-- `-Djava.util.logging.config.file=logging.properties`: Configure logging
-
-### Backtest Parameters
+You can replace the default data provider by implementing:
 
 ```java
-Backtest backtest = new Backtest(initialCapital, priceSeries);
-backtest.setLeverage(2.0); // Set leverage multiplier
-```
-
-## Performance Metrics
-
-The framework calculates comprehensive performance metrics:
-
-- **Returns**: Total and annualized returns
-- **Sharpe Ratio**: Risk-adjusted returns (assuming 0% risk-free rate)
-- **Maximum Drawdown**: Largest peak-to-trough decline
-- **Win Rate**: Percentage of profitable trades
-- **Commission Costs**: Total transaction costs
-
-## Data Sources
-
-### Alpha Vantage Integration
-
-The framework includes built-in support for Alpha Vantage market data:
-
-```java
-HistoricalPriceService dataService = new AlphaVantageHistoricalPriceService(apiKey);
-Observable<DoubleSeries> prices = dataService.getHistoricalAdjustedPrices("AAPL");
-```
-
-### Custom Data Sources
-
-Implement the `HistoricalPriceService` interface for custom data providers:
-
-```java
-public class CustomDataService implements HistoricalPriceService {
-    @Override
-    public Observable<DoubleSeries> getHistoricalAdjustedPrices(String symbol) {
-        // Your data fetching logic
-    }
+public interface HistoricalPriceService {
+    Observable<DoubleSeries> getHistoricalAdjustedPrices(String symbol);
 }
 ```
 
-## Advanced Features
+---
 
-### Kalman Filter Implementation
+## 🧠 Advanced Capabilities
 
-The framework includes a complete Kalman filter implementation for state estimation in trading strategies:
+### 📐 Kalman Filter
+
+Built-in to model time-varying hedge ratio between cointegrated pairs:
 
 ```java
-KalmanFilter filter = new KalmanFilter(stateCount, sensorCount);
-filter.setUpdateMatrix(transitionMatrix);
-filter.step(measurement);
+KalmanFilter kf = new KalmanFilter(2, 1);
+kf.setUpdateMatrix(A);
+kf.step(observedSpread);
 ```
 
-### Cointegration Analysis
-
-Built-in cointegration analysis for pairs trading:
+### 🔍 Cointegration Model
 
 ```java
 Cointegration coint = new Cointegration(delta, r);
-coint.step(priceX, priceY);
+coint.step(priceA, priceB);
 double spread = coint.getError();
 ```
 
-## Testing
+---
 
-Run the test suite:
+## 🧪 Testing
+
+Run test suite:
 
 ```bash
 ./gradlew test
 ```
 
-## Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+## 🤝 Contributing
 
-## License
+1. Fork this repo
+2. Create your branch (`git checkout -b feature-X`)
+3. Add meaningful changes and tests
+4. Create a PR with a clear description
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+---
 
-## Disclaimer
+## 📝 License
 
-This software is for educational and research purposes only. Past performance does not guarantee future results. Always conduct thorough testing before using any trading strategy with real money.
+MIT License. Free for commercial and academic use. Contributions welcome!
+
+---
+
+## ⚠️ Disclaimer
+
+This tool is for **educational and research purposes** only. It simulates past performance, which is not indicative of future results. Use with caution in real trading environments.
