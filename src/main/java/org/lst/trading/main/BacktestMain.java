@@ -7,6 +7,7 @@ import org.lst.trading.lib.series.MultipleDoubleSeries;
 import org.lst.trading.lib.util.AlphaVantageHistoricalPriceService;
 import org.lst.trading.lib.util.HistoricalPriceService;
 import org.lst.trading.lib.util.Util;
+import org.lst.trading.lib.chart.BacktestChartGenerator;
 import org.lst.trading.main.strategy.kalman.CointegrationTradingStrategy;
 
 import java.util.Locale;
@@ -54,8 +55,17 @@ public class BacktestMain {
         System.out.println(format(Locale.US, "Commissions = %f", result.getCommissions()));
         System.out.println(format(Locale.US, "P/L = %.2f, Final value = %.2f, Result = %.2f%%, Annualized = %.2f%%, Sharpe (rf=0%%) = %.2f", result.getPl(), result.getFinalValue(), result.getReturn() * 100, result.getReturn() / (days / 251.) * 100, result.getSharpe()));
 
-        System.out.println("Orders: " + Util.writeStringToTempFile(orders.toString()));
+        String ordersFilePath = Util.writeStringToTempFile(orders.toString()).toString();
+        System.out.println("Orders: " + ordersFilePath);
         System.out.println("Statistics: " + Util.writeCsv(new MultipleDoubleSeries(result.getPlHistory(), result.getMarginHistory())));
+        
+        // Generate and display P/L chart
+        try {
+            System.out.println("\nGenerating P/L chart...");
+            BacktestChartGenerator.plotPLChartFromCsv(ordersFilePath);
+        } catch (Exception e) {
+            System.err.println("Error generating chart: " + e.getMessage());
+        }
     }
 
     private static void findApiKey() {
