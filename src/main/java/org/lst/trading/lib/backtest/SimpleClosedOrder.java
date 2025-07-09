@@ -14,7 +14,7 @@ class SimpleClosedOrder implements ClosedOrder {
         mOrder = order;
         mClosePrice = closePrice;
         mCloseInstant = closeInstant;
-        mPl = calculatePl(mClosePrice);
+        mPl = mOrder.calculatePl(mClosePrice);
     }
 
     @Override public int getId() {

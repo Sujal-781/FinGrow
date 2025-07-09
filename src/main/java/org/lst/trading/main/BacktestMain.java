@@ -14,7 +14,7 @@ import java.util.Locale;
 import static java.lang.String.format;
 
 public class BacktestMain {
-    static String alphaVantantageApiKey = ""; // fill API key in here or pass via system property: -Dalphavantantage.apikey=APIKEY
+    static String alphaVantageApiKey = "demo"; // Using demo key for testing
 
     public static void main(String[] args) throws Exception {
         findApiKey();
@@ -26,7 +26,7 @@ public class BacktestMain {
         TradingStrategy strategy = new CointegrationTradingStrategy(x, y);
 
         // download historical prices
-        HistoricalPriceService finance = new AlphaVantageHistoricalPriceService(alphaVantantageApiKey);
+        HistoricalPriceService finance = new AlphaVantageHistoricalPriceService(alphaVantageApiKey);
         MultipleDoubleSeries priceSeries = new MultipleDoubleSeries(finance.getHistoricalAdjustedPrices(x).toBlocking().first(), finance.getHistoricalAdjustedPrices(y).toBlocking().first());
 
         // initialize the backtesting engine
@@ -59,14 +59,13 @@ public class BacktestMain {
     }
 
     private static void findApiKey() {
-        String key = System.getProperty("alphavantantage.apikey");
+        String key = System.getProperty("alphavantage.apikey");
         if (key != null) {
-            alphaVantantageApiKey = key;
+            alphaVantageApiKey = key;
         }
 
-        if (alphaVantantageApiKey.isEmpty()) {
-            System.out.println("ERROR: Claim free alphavantage API key at https://www.alphavantage.co/support/#api-key and set the alphaVantantageApiKey variable accordingly");
-            System.exit(1);
+        if (alphaVantageApiKey.isEmpty() || alphaVantageApiKey.equals("demo")) {
+            System.out.println("WARNING: Using demo API key. For production use, claim free alphavantage API key at https://www.alphavantage.co/support/#api-key and set via system property: -Dalphavantage.apikey=YOUR_KEY");
         }
     }
 }

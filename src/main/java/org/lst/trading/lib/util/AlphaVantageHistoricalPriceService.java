@@ -21,7 +21,7 @@ public class AlphaVantageHistoricalPriceService implements HistoricalPriceServic
 
     public static final String SEP = ",";
     public static final CsvReader.ParseFunction<Instant> DATE_COLUMN = ofColumn("timestamp").map(s -> LocalDate.from(DateTimeFormatter.ISO_DATE.parse(s)).atStartOfDay(ZoneOffset.UTC.normalized()).toInstant());
-    public static final CsvReader.ParseFunction<Double> CLOSE_COLUMN = doubleColumn("close");
+    public static final CsvReader.ParseFunction<Double> CLOSE_COLUMN = doubleColumn("adjusted_close");
     public static final CsvReader.ParseFunction<Double> HIGH_COLUMN = doubleColumn("high");
     public static final CsvReader.ParseFunction<Double> LOW_COLUMN = doubleColumn("low");
     public static final CsvReader.ParseFunction<Double> OPEN_COLUMN = doubleColumn("open");
@@ -49,7 +49,7 @@ public class AlphaVantageHistoricalPriceService implements HistoricalPriceServic
     }
 
     private static String createHistoricalPricesUrl(String symbol, String apikey) {
-        return format("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=%s&apikey=%s&datatype=csv&outputsize=full",
+        return format("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=%s&datatype=csv&outputsize=full",
                 symbol, apikey);
     }
 

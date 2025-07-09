@@ -29,7 +29,7 @@ class BacktestTradingContext implements TradingContext {
     List<SimpleOrder> mOrders = new ArrayList<>();
 
     double mClosedPl = 0;
-    List<SimpleClosedOrder> mClosedOrders = new ArrayList<>();
+    List<ClosedOrder> mClosedOrders = new ArrayList<>();
     double mLeverage;
 
     @Override public Instant getTime() {

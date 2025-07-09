@@ -1,9 +1,8 @@
 package org.lst.trading.lib.csv;
 
-import rx.functions.Func1;
-
 import java.io.*;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
@@ -15,13 +14,13 @@ public class CsvWriter<T> {
         return new CsvWriter<>(columns);
     }
 
-    public static <T> Column<T> column(String name, Func1<T, Object> f) {
+    public static <T> Column<T> column(String name, Function<T, Object> f) {
         return new Column<T>() {
             @Override public String getName() {
                 return name;
             }
 
-            @Override public Func1<T, Object> getF() {
+            @Override public Function<T, Object> getF() {
                 return f;
             }
         };
@@ -30,7 +29,7 @@ public class CsvWriter<T> {
     public interface Column<T> {
         String getName();
 
-        Func1<T, Object> getF();
+        Function<T, Object> getF();
     }
 
     String mSeparator = ",";
@@ -44,7 +43,7 @@ public class CsvWriter<T> {
         return concat(
                 of(mColumns.stream().map(Column::getName).collect(joining(mSeparator))),
                 values.map(x -> mColumns.stream().map(f -> {
-                    Object o = f.getF().call(x);
+                    Object o = f.getF().apply(x);
                     return o == null ? "" : o.toString();
                 }).collect(joining(mSeparator)))
         );
